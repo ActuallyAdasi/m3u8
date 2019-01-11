@@ -663,6 +663,19 @@ def test_none_media_sequence_gracefully_ignored():
     expected = '#EXTM3U\n'
     assert result == expected
 
+def test_0_discontinuity_sequence_added_to_file():
+    obj = m3u8.M3U8()
+    obj.discontinuity_sequence = 0
+    result = obj.dumps()
+    expected = '#EXTM3U\n'
+    assert result == expected
+
+def test_none_discontinuity_sequence_gracefully_ignored():
+    obj = m3u8.M3U8()
+    obj.discontinuity_sequence = None
+    result = obj.dumps()
+    expected = '#EXTM3U\n'
+    assert result == expected
 
 def test_should_correctly_update_base_path_if_its_blank():
     segment = Segment('entire.ts', 'http://1.2/')
@@ -728,6 +741,16 @@ def test_start_with_precise():
     assert obj.start.time_offset == 10.5
     assert obj.start.precise == 'YES'
     assert ext_x_start + ':TIME-OFFSET=10.5,PRECISE=YES\n' in obj.dumps()
+
+
+def test_playlist_stream_info_contains_group_id_refs():
+    obj = m3u8.M3U8(playlists.VARIANT_PLAYLIST_WITH_VIDEO_CC_SUBS_AND_AUDIO)
+    assert len(obj.playlists) == 2
+    for pl in obj.playlists:
+        assert pl.stream_info.closed_captions == 'cc'
+        assert pl.stream_info.subtitles == 'sub'
+        assert pl.stream_info.audio == 'aud'
+        assert pl.stream_info.video == 'vid'
 
 
 # custom asserts

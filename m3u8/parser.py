@@ -75,6 +75,9 @@ def parse(content, strict=False):
         elif line.startswith(protocol.ext_x_media_sequence):
             _parse_simple_parameter(line, data, int)
 
+        elif line.startswith(protocol.ext_x_discontinuity_sequence):
+            _parse_simple_parameter(line, data, int)
+
         elif line.startswith(protocol.ext_x_program_date_time):
             _, program_date_time = _parse_simple_parameter_raw_value(line, cast_date_time)
             if not data.get('program_date_time'):
@@ -234,7 +237,7 @@ def _parse_attribute_list(prefix, line, atribute_parser):
 def _parse_stream_inf(line, data, state):
     data['is_variant'] = True
     data['media_sequence'] = None
-    atribute_parser = remove_quotes_parser('codecs', 'audio', 'video', 'subtitles')
+    atribute_parser = remove_quotes_parser('codecs', 'audio', 'video', 'subtitles', 'closed_captions')
     atribute_parser["program_id"] = int
     atribute_parser["bandwidth"] = lambda x: int(float(x))
     atribute_parser["average_bandwidth"] = int
@@ -320,7 +323,7 @@ def _parse_cueout_start(line, state, prevline):
 
 
 def string_to_lines(string):
-    return string.strip().replace('\r\n', '\n').split('\n')
+    return string.strip().splitlines()
 
 
 def remove_quotes_parser(*attrs):
@@ -338,7 +341,7 @@ def remove_quotes(string):
 
     '''
     quotes = ('"', "'")
-    if string and string[0] in quotes and string[-1] in quotes:
+    if string.startswith(quotes) and string.endswith(quotes):
         return string[1:-1]
     return string
 
@@ -348,4 +351,5 @@ def normalize_attribute(attribute):
 
 
 def is_url(uri):
-    return re.match(r'https?://', uri) is not None
+    return uri.startswith(('https://', 'http://'))
+
